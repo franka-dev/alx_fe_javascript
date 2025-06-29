@@ -1,4 +1,4 @@
-// script.js - Final version with fetchQuotesFromServer and conflict resolution
+// script.js - Updated with correct JSONPlaceholder URL
 
 let quotes = [];
 let currentCategory = "all";
@@ -144,20 +144,26 @@ function showNotification(message) {
   setTimeout(() => div.remove(), 3000);
 }
 
-// ✅ fetchQuotesFromServer - required function name
+// ✅ fetchQuotesFromServer - using JSONPlaceholder
 async function fetchQuotesFromServer() {
-  const mockServerURL = "https://mocki.io/v1/fake-server-response-id"; // Replace with your real URL
+  const url = "https://jsonplaceholder.typicode.com/posts";
   try {
-    const response = await fetch(mockServerURL);
+    const response = await fetch(url);
     const serverQuotes = await response.json();
+
     let changes = 0;
     serverQuotes.forEach(serverQuote => {
-      const exists = quotes.find(q => q.text === serverQuote.text);
+      const newQuote = {
+        text: serverQuote.title,
+        category: "Server"
+      };
+      const exists = quotes.find(q => q.text === newQuote.text);
       if (!exists) {
-        quotes.push(serverQuote);
+        quotes.push(newQuote);
         changes++;
       }
     });
+
     if (changes > 0) {
       saveQuotes();
       populateCategories();
