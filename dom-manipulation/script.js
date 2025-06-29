@@ -1,4 +1,4 @@
-// script.js - Updated with correct JSONPlaceholder URL
+// script.js - Final version with POST method, headers, syncQuotes, notifications, and conflict resolution
 
 let quotes = [];
 let currentCategory = "all";
@@ -90,10 +90,12 @@ function addQuote() {
     return;
   }
 
-  quotes.push({ text, category });
+  const newQuote = { text, category };
+  quotes.push(newQuote);
   saveQuotes();
   populateCategories();
   alert("Quote added!");
+  syncQuotes(newQuote); // send new quote to server
 }
 
 function exportToJsonFile() {
@@ -150,7 +152,6 @@ async function fetchQuotesFromServer() {
   try {
     const response = await fetch(url);
     const serverQuotes = await response.json();
-
     let changes = 0;
     serverQuotes.forEach(serverQuote => {
       const newQuote = {
@@ -163,7 +164,6 @@ async function fetchQuotesFromServer() {
         changes++;
       }
     });
-
     if (changes > 0) {
       saveQuotes();
       populateCategories();
@@ -172,6 +172,25 @@ async function fetchQuotesFromServer() {
   } catch (error) {
     showNotification("⚠️ Failed to fetch from server");
     console.error("Server fetch error:", error);
+  }
+}
+
+// ✅ syncQuotes - POST a quote to server
+async function syncQuotes(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ title: quote.text, body: quote.category, userId: 1 })
+    });
+    if (response.ok) {
+      showNotification("✅ Quote synced with server");
+    }
+  } catch (err) {
+    console.error("POST sync error:", err);
+    showNotification("⚠️ Failed to sync with server");
   }
 }
 
