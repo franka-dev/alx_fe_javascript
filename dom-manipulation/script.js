@@ -1,4 +1,4 @@
-// script.js - Final version with POST method, headers, syncQuotes, notifications, and conflict resolution
+// script.js - Final version including "Quotes synced with server!" message
 
 let quotes = [];
 let currentCategory = "all";
@@ -186,7 +186,7 @@ async function syncQuotes(quote) {
       body: JSON.stringify({ title: quote.text, body: quote.category, userId: 1 })
     });
     if (response.ok) {
-      showNotification("✅ Quote synced with server");
+      showNotification("Quotes synced with server!");
     }
   } catch (err) {
     console.error("POST sync error:", err);
