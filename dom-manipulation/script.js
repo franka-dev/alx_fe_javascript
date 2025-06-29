@@ -1,7 +1,7 @@
+// script.js - Final version with fetchQuotesFromServer and conflict resolution
+
 let quotes = [];
 let currentCategory = "all";
-let syncInterval = null;
-const mockServerURL = "https://mocki.io/v1/fake-server-response-id"; // Replace with your own
 
 function loadQuotes() {
   const savedQuotes = localStorage.getItem("quotes");
@@ -114,7 +114,6 @@ function importFromJsonFile(event) {
     try {
       const imported = JSON.parse(e.target.result);
       if (!Array.isArray(imported)) throw new Error("Invalid file format");
-
       quotes.push(...imported);
       saveQuotes();
       populateCategories();
@@ -137,41 +136,40 @@ function loadLastViewedQuote() {
   }
 }
 
-// ----------------- 🛰 Server Sync ------------------
+function showNotification(message) {
+  const div = document.createElement("div");
+  div.textContent = message;
+  div.style.cssText = "position:fixed;bottom:10px;right:10px;background:#333;color:white;padding:10px;border-radius:5px;z-index:1000";
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}
 
-async function syncWithServer() {
+// ✅ fetchQuotesFromServer - required function name
+async function fetchQuotesFromServer() {
+  const mockServerURL = "https://mocki.io/v1/fake-server-response-id"; // Replace with your real URL
   try {
     const response = await fetch(mockServerURL);
     const serverQuotes = await response.json();
-
     let changes = 0;
     serverQuotes.forEach(serverQuote => {
-      const match = quotes.find(q => q.text === serverQuote.text);
-      if (!match) {
+      const exists = quotes.find(q => q.text === serverQuote.text);
+      if (!exists) {
         quotes.push(serverQuote);
         changes++;
       }
     });
-
     if (changes > 0) {
       saveQuotes();
       populateCategories();
       showNotification(`🔄 Synced ${changes} new quote(s) from server`);
     }
   } catch (error) {
-    showNotification("⚠️ Failed to sync with server");
+    showNotification("⚠️ Failed to fetch from server");
+    console.error("Server fetch error:", error);
   }
 }
 
-function showNotification(message) {
-  const div = document.createElement("div");
-  div.textContent = message;
-  div.style.cssText = "position:fixed;bottom:10px;right:10px;background:#333;color:white;padding:10px;border-radius:5px;";
-  document.body.appendChild(div);
-  setTimeout(() => div.remove(), 3000);
-}
-
-// ----------------- ✅ INIT ------------------
+// ✅ INIT
 
 document.addEventListener("DOMContentLoaded", () => {
   loadQuotes();
@@ -181,6 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 
-  syncWithServer(); // Initial
-  syncInterval = setInterval(syncWithServer, 30000); // Every 30 sec
+  fetchQuotesFromServer(); // Initial fetch
+  setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
 });
